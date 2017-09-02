@@ -2,12 +2,12 @@
 for calling Restful Api with The Blog-Article content
 
 Steps for using:
-**SETUP
+<br/>**SETUP
 1) get source with git
 2) Setup and Install blog-article-restful(drupal-8-3-7)
 3) After finished installing then Enable module("Blog Article via Restful") via CMS drupal
 4) Input some contents(Blog Article) into system via CMS Drupal
-**ACCESS RESTFUL with links
+<br/>**ACCESS RESTFUL with links
 1) Suppose that Website at link : http://drupal-8-3-7-x1.localhost/
 2) access link via Browser(Chrome, Firefox,..) to 
   http://drupal-8-3-7-x1.localhost/articles?_format=json
