@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - blog_article_restful
+  enforced:
+    module:
+      - blog_article_restful
+name: Blog Article
+type: blog_article
+description: 'Use <em>Blog-Article</em> to call from website via restful api'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: false
+third_party_settings:
+  blog_article_restful:
+    blog_article: true
+    image_field: blog_article_image

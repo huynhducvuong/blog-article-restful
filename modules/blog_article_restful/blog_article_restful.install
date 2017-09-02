@@ -1,0 +1,116 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the blog_article_restful module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function blog_article_restful_schema() {
+//    $schema = array();
+//
+//    $schema['blog_articles_restful'] = array(
+//        'description' => 'Blog-Article information for nodes.',
+//        'fields' => array(
+//            'vid' => array(
+//                'description' => 'The {node}.vid of the blog-article.',
+//                'type' => 'int',
+//                'unsigned' => TRUE,
+//                'not null' => TRUE,
+//                'default' => 0,
+//            ),
+//            'nid' => array(
+//                'description' => 'The {node}.nid of the blog-article.',
+//                'type' => 'int',
+//                'unsigned' => TRUE,
+//                'not null' => TRUE,
+//                'default' => 0,
+//            )
+//        ),
+//        'indexes' => array(
+//            'nid' => array('nid'),
+//        ),
+//        'primary key' => array('vid'),
+//        'foreign keys' => array(
+//            'node' => array(
+//                'table' => 'node',
+//                'columns' => array(
+//                    'nid' => 'nid',
+//                    'vid' => 'vid',
+//                ),
+//            ),
+//        ),
+//    );
+
+//    return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function blog_article_restful_install(){
+    if ($vid = \Drupal::config('blog_article_restful.settings')->get('vocabulary')) {
+        $vocab = \Drupal\taxonomy\Entity\Vocabulary::load($vid);
+        if(is_null($vocab)) {
+            $vocab =  \Drupal\taxonomy\Entity\Vocabulary::create(
+                array(
+                    'vid' => $vid,
+                    //'machine_name' => $vid,
+                    'description' => 'Blog Article Catalog',
+                    'name' => 'Blog Article Catalog',
+                )
+            );
+            $vocab->save();
+        }
+        if($vocab) {
+            $query = \Drupal::entityQuery('taxonomy_term')
+                                        ->condition('vid', $vid);
+            $tids = $query->execute();
+            if(count($tids)<1) {
+                \Drupal\taxonomy\Entity\Term::create([
+                    'vid' => $vid,
+                    'name' => 'Jeans',
+                    'field_url' => '/jeans',
+                ])->save();
+                \Drupal\taxonomy\Entity\Term::create([
+                    'vid' => $vid,
+                    'name' => 'Kaki',
+                    'field_url' => '/kaki',
+                ])->save();
+            }
+        }
+    }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function blog_article_restful_uninstall() {
+    if ($vid = \Drupal::config('blog_article_restful.settings')->get('vocabulary')) {
+        $vocab = \Drupal\taxonomy\Entity\Vocabulary::load($vid);
+        if($vocab) {
+            drupal_set_message(t('The Blog Article %catalog vocabulary has not been deleted. If you need to delete it, <a href=":url">please do so manually</a>.', ['%catalog' => $vocab->label(),
+                ':url' => \Drupal\Core\Url::fromRoute('entity.taxonomy_vocabulary.edit_form', ['taxonomy_vocabulary' => $vocab->id()])->toString()]), 'warning');
+        }
+    }
+    \Drupal::configFactory()->reset('field.storage.node.blog_article_image');
+    \Drupal::configFactory()->reset('field.storage.node.taxonomy_blog_article_catalog');
+//    $styles = \Drupal\image\Entity\ImageStyle::loadMultiple(['blog_article_restful', 'blog_article_thumbnail']);
+//    if (!empty($styles)) {
+//        $style_names = array();
+//        foreach ($styles as $style) {
+//            $style_names[] = $style->label();
+//        }
+//        drupal_set_message(\Drupal::translation()->formatPlural(count($style_names),
+//            'The image style %style has not been deleted. If you need to delete it, <a href=":url">please do so manually</a>.',
+//            'The image styles %styles have not been deleted. If you need to delete them, <a href=":url">please do so manually</a>.',
+//            array(
+//                '%style' => $style_names[0],
+//                '%styles' => implode(', ', $style_names),
+//                ':url' => \Drupal\Core\Url::fromRoute('entity.image_style.collection')->toString(),
+//            )
+//        ), 'warning');
+//    }
+}

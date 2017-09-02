@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.taxonomy_blog_article_catalog
+    - node.type.blog_article
+  module:
+    - taxonomy
+id: node.blog_article.taxonomy_blog_article_catalog
+field_name: taxonomy_blog_article_catalog
+entity_type: node
+bundle: blog_article
+label: Blog Article Catalog
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      catalog: blog_article_catalog
+    sort:
+      field: _none
+    auto_create: true
+field_type: entity_reference

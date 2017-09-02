@@ -1,0 +1,30 @@
+blog_article_restful.settings:
+  type: config_object
+  label: 'Blog Article settings'
+  mapping:
+      breadcrumb:
+        type: boolean
+        label: ''
+      display:
+        type: string
+        label: 'Path string'
+      vocabulary:
+        type: string
+        label: 'Vocabulary name'
+      expand_categories:
+        type: boolean
+        label: ''
+      block_nodecount:
+        type: boolean
+        label: ''
+
+node.type.*.third_party_settings.blog_article_restful:
+  type: mapping
+  label: 'Blog Article node type settings'
+  mapping:
+    blog_article:
+      type: boolean
+      label: 'Is this a blog article type?'
+    image_field:
+      type: string
+      label: 'Name of blog article image field'

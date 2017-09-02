@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - basic_auth
+    - blog_article_restful
+    - serialization
+    - user
+id: details_blog_article_rest_resource
+plugin_id: details_blog_article_rest_resource
+granularity: resource
+configuration:
+  methods:
+    - GET
+  formats:
+    - json
+  authentication:
+    - basic_auth
+    - cookie

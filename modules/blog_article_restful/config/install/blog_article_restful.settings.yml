@@ -1,0 +1,6 @@
+breadcrumb: true
+display: blog_article_catalog
+vocabulary: blog_article_catalog
+
+expand_categories: false
+block_nodecount: true

@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Blog Article Catalog'
+vid: blog_article_catalog
+description: 'Blog Article Catalog'
+hierarchy: 0
+weight: 0

@@ -1,0 +1,202 @@
+<?php
+
+/**
+ * @file
+ *
+ * Provides information that is common to all blog-article
+ */
+
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\NodeType;
+use Drupal\node\NodeInterface;
+use Drupal\node\NodeTypeInterface;
+
+
+/**
+ * Implements hook_node_type_insert().
+ */
+function blog_article_restful_node_type_insert(NodeTypeInterface $type) {
+    if ($type->getThirdPartySetting('blog_article_restful', 'blog_article', FALSE)) {
+        blog_article_restful_Add_default_image_field($type->id());
+
+//        $result = db_query('SELECT n.vid, n.nid FROM {node} n LEFT JOIN {blog_articles_restful} p ON n.vid = p.vid WHERE n.type = :type AND p.vid IS NULL', [':type' => $type->id()]);
+//        foreach ($result as $node) {
+//            db_insert('blog_articles_restful')
+//                ->fields(array(
+//                        'nid' => $node->nid,
+//                        'vid' => $node->vid,
+//                    ))
+//                ->execute();
+//        }
+        blog_article_restful_Add_taxonomy_catalog_field($type->id());
+        blog_article_restful_Add_body_field($type->id());
+    }
+}
+
+/**
+ * Adds a catalog taxonomy reference field to the specified node type.
+ */
+function blog_article_restful_Add_taxonomy_catalog_field($type) {
+    $vid = \Drupal::config('blog_article_restful.settings')->get('vocabulary');
+
+    if (is_null(FieldStorageConfig::loadByName('node', 'taxonomy_blog_article_catalog'))) {
+        FieldStorageConfig::create([
+            'entity_type' => 'node',
+            'field_name' => 'taxonomy_blog_article_catalog',
+            'type' => 'entity_reference',
+            'settings' => array(
+                'target_type' => 'taxonomy_term',
+            ),
+            'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+        ])->save();
+    }
+
+    if (!FieldConfig::loadByName('node', $type, 'taxonomy_blog_article_catalog')) {
+        FieldConfig::create([
+            'field_name' => 'taxonomy_blog_article_catalog',
+            'entity_type' => 'node',
+            'bundle' => $type,
+            'label' => t('Blog Article Catalog'),
+            'settings' => array(
+                'handler_settings' => array(
+                    'target_bundles' => array(
+                        $vid => $vid,
+                    ),
+                    'auto_create' => TRUE,
+                ),
+            ),
+        ])->save();
+    }
+
+    // Make sure catalog field shows up on node edit form.
+    entity_get_form_display('node', $type, 'default')
+        ->setComponent('taxonomy_blog_article_catalog', array(
+            'type' => 'options_select',
+        ))
+        ->save();
+
+    // Display catalog value on node view.
+    entity_get_display('node', $type, 'default')
+        ->setComponent('taxonomy_blog_article_catalog', array(
+            'type' => 'entity_reference_label',
+        ))
+        ->save();
+}
+
+/**
+ * Implements hook_node_type_update().
+ */
+function blog_article_restful_node_type_update(NodeTypeInterface $type) {
+    if (!$type->original->getThirdPartySetting('blog_article_restful', 'blog_article', FALSE)) {
+        blog_article_restful_node_type_insert($type);
+    }
+}
+
+/**
+ * Creates a file field with an image field widget, and attach it to blog-article.
+ */
+function blog_article_restful_Add_default_image_field($type = 'blog_article') {
+    // Set up field if it doesn't exist.
+    if (is_null(FieldStorageConfig::loadByName('node', 'blog_article_image'))) {
+        FieldStorageConfig::create([
+            'entity_type' => 'node',
+            'field_name' => 'blog_article_image',
+            'type' => 'image',
+            'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+            'settings' => array(
+                'display_field' => 0,
+            ),
+        ])->save();
+    }
+
+    if ($type) {
+        // Accept single or multiple types as input.
+        $types = (array) $type;
+    }
+    foreach ($types as $type) {
+        $field_name = NodeType::load($type)->getThirdPartySetting('blog_article_restful', 'image_field', 'blog_article_image');
+
+        // Only add the instance if it doesn't exist. Don't overwrite any changes.
+        if ($field_name && !FieldConfig::loadByName('node', $type, $field_name)) {
+            FieldConfig::create([
+                'entity_type' => 'node',
+                'bundle' => $type,
+                'field_name' => $field_name,
+                'label' => t('Image'),
+                'weight' => -2,
+            ])->save();
+
+            NodeType::load($type)
+                ->setThirdPartySetting('blog_article_restful', 'image_field', $field_name)
+                ->save();
+
+            entity_get_form_display('node', $type, 'default')
+                ->setComponent($field_name, array(
+                    'type' => 'image_image',
+                ))
+                ->save();
+
+            entity_get_display('node', $type, 'default')
+                ->setComponent($field_name, array(
+                    'label' => 'hidden',
+                    'type' => 'image',
+                ))
+                ->save();
+
+            entity_get_display('node', $type, 'teaser')
+                ->setComponent($field_name, array(
+                    'label' => 'hidden',
+                    'type' => 'image',
+                ))
+                ->save();
+        }
+    }
+}
+
+/**
+ * Creates a body field with an body field widget, and attach it to blog-article.
+ */
+function blog_article_restful_Add_body_field($type = 'blog_article') {
+    // Set up field if it doesn't exist.
+        $field_name = 'body';
+
+        // Only add the instance if it doesn't exist. Don't overwrite any changes.
+        if ($field_name && !FieldConfig::loadByName('node', $type, $field_name)) {
+            FieldConfig::create([
+                'entity_type' => 'node',
+                'bundle' => $type,
+                'field_name' => $field_name,
+                'label' => t('Body'),
+                'weight' => -3,
+            ])->save();
+        }
+    entity_get_form_display('node', $type, 'default')
+        ->setComponent($field_name, array(
+            'type' => 'text_textarea_with_summary',
+        ))
+        ->save();
+
+    entity_get_display('node', $type, 'default')
+        ->setComponent($field_name, array(
+            'label' => 'hidden',
+            'type' => 'text_default',
+        ))
+        ->save();
+
+    entity_get_display('node', $type, 'teaser')
+        ->setComponent($field_name, array(
+            'label' => 'hidden',
+            'type' => 'text_default',
+        ))
+        ->save();
+}
+
